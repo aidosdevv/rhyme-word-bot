@@ -96,7 +96,7 @@ const start = async () => {
 
             if (text === '/start') {
                 await bot.sendSticker(chatId, 'https://tlgrm.ru/_/stickers/ea5/382/ea53826d-c192-376a-b766-e5abc535f1c9/7.webp')
-                return bot.sendMessage(chatId, `Добро пожаловать в телеграм бот о рифме слов /info - про тебя и /game - игра о рифме о слов`)
+                return bot.sendMessage(chatId, `Добро пожаловать в телеграм бот о рифме слов \n /info - про тебя и /game - игра о рифме о слов \n /mystats - резултаты`)
             }
             if (text === '/info') {
                 console.log(chatId, msg.from.first_name)
