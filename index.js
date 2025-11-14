@@ -1,9 +1,13 @@
 const TelegramApi = require('node-telegram-bot-api')
 const askFromGemini = require("./test-gemini-ai")
-const token = '8348005128:AAHK9BD4nuBrqBwSxFpKf_2LsC52tS3N3bk'
+const connectDB = require('./db')
+const UserWord = require('./model/User')
 
+const token = '8348005128:AAHK9BD4nuBrqBwSxFpKf_2LsC52tS3N3bk'
 const bot = new TelegramApi(token, {polling: true})
 const chats = {}
+
+connectDB()
 
 const startGame = async (chatId) => {
     chats[chatId] = { inGame: true }
@@ -15,6 +19,19 @@ const startGame = async (chatId) => {
         if (!chats[chatId]?.inGame) return
 
         const word = msg.text.trim()
+
+        try {
+            const userWord = new UserWord({
+                userId: msg.from.id,
+                userName: msg.from.first_name,
+                word: word
+            });
+            await userWord.save();
+            console.log(`Saved word: "${word}" from user: ${msg.from.first_name}`);
+        } catch (error) {
+            console.error('Error saving to DB:', error.message);
+        }
+
         const answer = await askFromGemini(word)
 
         const replyText = answer && answer.length > 0
@@ -67,6 +84,7 @@ const start = async () => {
         {command: '/start', description: 'Начальное приветствие'},
         {command: '/info', description: 'Получить информацию о пользователе'},
         {command: '/game', description: 'Игра рифме'},
+        {command: '/mystats', description: 'Моя статистика'},
     ])
 
     bot.on('message', async msg => {
@@ -86,6 +104,28 @@ const start = async () => {
             }
             if (text === '/game') {
                 return startGame(chatId)
+            }
+            if (text === '/mystats') {
+           
+                try {
+                    const userWords = await UserWord.find({ userId: msg.from.id }).sort({ time: -1 });
+                    
+                    if (userWords.length === 0) {
+                        return bot.sendMessage(chatId, 'Вы еще не искали рифмы! Начните игру /game');
+                    }
+                    
+                    const lastWords = userWords.slice(0, 5).map(item => item.word).join(', ');
+                    const totalWords = userWords.length;
+                    
+                    return bot.sendMessage(chatId, 
+                        `Ваша статистика:\n\n` +
+                        `Всего слов: ${totalWords}\n` +
+                        `Последние слова: ${lastWords}`
+                    );
+                } catch (error) {
+                    console.error('Error getting stats:', error);
+                    return bot.sendMessage(chatId, 'Ошибка при получении статистики');
+                }
             }
             return bot.sendMessage(chatId, 'Я тебя не понимаю, попробуй еще раз!)')
         } catch (e) {
