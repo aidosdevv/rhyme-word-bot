@@ -12,12 +12,17 @@
   "dependencies": {
     "@google/genai": "^1.29.1",
     "@google/generative-ai": "^0.24.1",
+    "axios": "^1.13.2",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "mime": "^4.1.0",
     "mongodb": "^7.0.0",
     "mongoose": "^8.19.3",
-    "node-telegram-bot-api": "^0.66.0"
+    "node-telegram-bot-api": "^0.66.0",
+    "ollama": "^0.6.3",
+    "openai": "^6.9.1",
+    "playwright": "^1.56.1",
+    "puppeteer": "^24.30.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

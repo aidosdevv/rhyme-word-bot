@@ -1,5 +1,5 @@
 const TelegramApi = require('node-telegram-bot-api')
-const askFromGemini = require("./test-gemini-ai")
+const askFromOpenAI = require("./test-gemini-ai")
 const connectDB = require('./db')
 const UserWord = require('./model/User')
 
@@ -32,7 +32,7 @@ const startGame = async (chatId) => {
             console.error('Error saving to DB:', error.message);
         }
 
-        const answer = await askFromGemini(word)
+        const answer = await askFromOpenAI(word)
 
         const replyText = answer && answer.length > 0
             ? `Рифмы: ${answer.join(', ')}`

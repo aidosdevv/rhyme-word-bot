@@ -1,30 +1,51 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 require('dotenv').config();
+const OpenAI = require('openai');
 
-async function askFromGemini(word_rhyme) {
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-  const prompt = `только ответ 5 точных рифм на ${word_rhyme} через запятую. Только слова→ без ошибок, без "не удалось"`;
+async function askFromOpenAI(word_rhyme) {
+
+  if (!word_rhyme || typeof word_rhyme !== 'string') {
+    return ['(ошибка слова)'];
+  }
+
+  const prompt = `Дай ровно 5 точных и красивых рифм к русскому слову "${word_rhyme}". 
+  Только сами слова через запятую, без номеров, без кавычек, без пояснений. 
+  Пример: дом — ком, том, гром, альбом, хром`;
 
   try {
-    const result = await model.generateContentStream(prompt);
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",           
+      messages: [
+        { role: "system", content: "Ты — эксперт по русской поэзии и рифмам. Даёшь только точные рифмы." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 50,
+    });
 
-    let fullText = '';
-    for await (const chunk of result.stream) {
-      fullText += chunk.text();
-    }
+    const text = completion.choices[0].message.content.trim();
 
-    return fullText
+   
+    const rhymes = text
       .split(',')
       .map(r => r.trim())
-      .filter(Boolean)
+      .filter(r => r.length > 0)
       .slice(0, 5);
 
+    
+    while (rhymes.length < 5) {
+      rhymes.push('(нет рифмы)');
+    }
+
+    return rhymes;
+
   } catch (error) {
-    console.error("Ошибка Gemini:", error);
-    return ['(не удалось найти рифмы)'];
+    console.error("Ошибка OpenAI:", error.message);
+    return ['(ошибка связи)'];
   }
 }
 
-module.exports = askFromGemini;
+module.exports = askFromOpenAI;
